@@ -172,8 +172,10 @@ const Board = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const groupId = location.state?.groupId || location.state?.id || null;
+  const [groupName, setGroupName] = useState(location.state?.groupName || "");
   console.log("location.state:", location.state);
   console.log("현재 그룹 ID:", groupId);
+  console.log("현재 그룹 Name:", groupName);
   const [keyword, setKeyword] = useState("");
   const [posts, setPosts] = useState([]);
 
@@ -186,7 +188,7 @@ const Board = () => {
       return;
     }
     console.log("navigate to /board with groupId:", groupId);
-    navigate("/board/upload", { state: { groupId } });
+    navigate("/board/upload", { state: { groupId, groupName } });
   };
 
   const handleDetail = (postId) => {
@@ -196,7 +198,7 @@ const Board = () => {
     }
     console.log("navigate 시 전달하는 값:", groupId);
     navigate("/board/detail", {
-      state: { groupId, postId },
+      state: { groupId, postId, groupName },
     });
   };
 
@@ -214,6 +216,9 @@ const Board = () => {
           }
         );
         setPosts(res.data);
+        if (!groupName && res.data.length > 0) {
+          setGroupName(res.data[0].groupName);
+        }
       } catch (err) {
         console.error("게시글 조회 실패:", err);
         alert("게시글 목록을 불러오는 데 실패했습니다.");
@@ -228,7 +233,7 @@ const Board = () => {
 
       navigate(location.pathname, {
         replace: true,
-        state: { groupId }, // 상태 초기화
+        state: { groupId, groupName }, // 상태 초기화
       });
     }
   }, [groupId, navigate, location]);
@@ -272,7 +277,9 @@ const Board = () => {
   return (
     <Container>
       <FilterSection>
-        <GroupButton>그룹 {groupId}</GroupButton>
+        <GroupButton>
+          {groupName || posts[0]?.groupName || "그룹 이름"}
+        </GroupButton>
         <SearchContainer>
           <SearchIcon />
           <SearchInput

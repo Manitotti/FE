@@ -120,7 +120,7 @@ export default function ManageDetail() {
   const [groupCapacity, setGroupCapacity] = useState(20);
   const [myId, setMyId] = useState(null);
   const [pendingMembers, setPendingMembers] = useState([]);
-
+  const [myMatchInfo, setMyMatchInfo] = useState(null);
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -318,6 +318,20 @@ export default function ManageDetail() {
     }
   };
 
+  const fetchMyMatchingInfo = async () => {
+    try {
+      const config = getAuthConfig();
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/v1/${id}/matching/me`,
+        config
+      );
+      console.log("내 마니또 정보:", res.data);
+      setMyMatchInfo(res.data);
+    } catch (err) {
+      console.error("내 마니또 정보 조회 실패:", err);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -326,8 +340,8 @@ export default function ManageDetail() {
     }
     fetchMembers();
     fetchPendingMembers();
+    fetchMyMatchingInfo();
   }, []);
-
   return (
     <ManageDetailContainer>
       <GroupDetailContainer>
@@ -357,7 +371,24 @@ export default function ManageDetail() {
             </CapacitySelect>
           </CapacityControlContainer>
         </GroupContainer>
-        {/* ✅ 가입 승인 대기자 목록 */}
+        {myMatchInfo && (
+          <>
+            <MemberMatchInfo
+              id={myId}
+              nickname={
+                members.find((m) => m.id === myId)?.nickname || "내 마니띠"
+              }
+              isMatch={true}
+              isReveal={true}
+              matchId={myMatchInfo.receiverId}
+              matchNickname={myMatchInfo.receiverNickname}
+              myId={myId}
+              isPending={false}
+            />
+          </>
+        )}
+
+        {/* 가입 승인 대기자 목록 */}
         {pendingMembers.length > 0 && (
           <>
             <h2 style={{ marginBottom: "10px" }}>가입 승인 대기자</h2>
@@ -378,7 +409,7 @@ export default function ManageDetail() {
           </>
         )}
 
-        {/* ✅ 현재 그룹 멤버 */}
+        {/* 현재 그룹 멤버 */}
         <h2 style={{ margin: "40px 0 10px" }}>그룹 멤버</h2>
         <MemberMatchInfoContainer>
           {members.map((member) => (
